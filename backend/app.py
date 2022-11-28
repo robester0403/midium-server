@@ -3,13 +3,16 @@
 #----------------------------------------------------------------------------#
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 from datetime import datetime
 from sqlalchemy import desc
 from waitress import serve
 from dotenv import load_dotenv
 from pathlib import Path
+import asyncio
 import openai
 import os
+
 
 #----------------------------------------------------------------------------#
 # Environment Setup
@@ -18,8 +21,10 @@ import os
 load_dotenv()
 
 app = Flask(__name__)
+
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123456@localhost/alchemy"
 db = SQLAlchemy(app)
+CORS(app)
 #----------------------------------------------------------------------------#
 # OpenAI.
 #----------------------------------------------------------------------------#
@@ -66,19 +71,26 @@ def format_blogpost(blogpost): # formatted JSON object that can be returned with
 #----------------------------------------------------------------------------#
 @app.route('/api/aitest', methods=['GET'])
 def hello_test():
-  prompt = 'write a linkedin post about being a flask achievement. Be very positive and use a lot of buzzwords. Explain thoroughly how you learned the project, what realizations you had from the project and why you should get hired by a company. List all the programming languages you would use. Use some emojis.'
-  response = openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
+  prompt = 'Write a point by point outline for a blog post that shows off to the general public what you learned to do today using javascript and React. The blog post should be more than 3 paragraphs and have lots of detail.The blog should be impressive to potential employers.. The tone of the blog post should be positive, humble and excited. Mention the accomplishment was in how you used Redux. Mention that redux may not always be the right choice in a full stack app. Mention any alternatives to Redux. Mention how you will continually work to get better.'
+  response = openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=300, temperature=0.6, top_p=1, frequency_penalty=0, presence_penalty=0.6)
   return response
 
-@app.route('/api/aitest', methods=['POST'])
-async def generate_draftpost():
+@app.route('/api/aitextgenerate', methods=['POST'])
+def generate_draftpost():
   language = request.json['language']
   framework = request.json['framework']
-  extra_prompt = request.json['extra_prompt']
+  prompt = request.json['prompt']
   # we will pass the prompts into the ai create function
-  prompt = 'write a linkedin post about being a flask achievement. Be very positive and use a lot of buzzwords. Explain thoroughly how you learned the project, what realizations you had from the project and why you should get hired by a company. List all the programming languages you would use. Use some emojis.'
-  response = await openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
-  return response
+  prompt = f'Write a point by point outline for a blog post that shows off to the general public what you learned to do today using {language} and {framework}. The blog post should be more than 3 paragraphs and have lots of detail.The blog should be impressive to potential employers. The tone of the blog post should be positive, humble and excited. {prompt} Mention how you will continually work to get better. Use some emojis.'
+
+  result = openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
+  # loop = asyncio.get_event_loop()
+  # result = loop.run_until_complete(openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6))
+  return result
+
+  
+@app.route('/api/aitextgenerate', methods=['POST'])
+def generate():  asyncio.run(generate_draftpost())
 
 
 # routes: Blogpost
@@ -97,7 +109,7 @@ def get_allposts():
     blogpost_data['created_at'] = blogpost.created_at
     blogpost_data['edited_at'] = blogpost.edited_at
     data.append(blogpost_data)
-  return jsonify({'data': data})
+  return jsonify({'posts': data})
 
 @app.route('/api/blogpost/<blog_id>', methods = ['GET'])
 def get_post(blog_id): # pass in the id here
