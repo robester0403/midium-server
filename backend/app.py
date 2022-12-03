@@ -41,7 +41,7 @@ class User(db.Model):
 
   def __repr__(self): #representation
       return '<User %r>' % self.username
-    
+
 class Blogpost(db.Model):
   __tablename__ = 'blogposts'
   id = db.Column(db.Integer, primary_key=True)
@@ -83,9 +83,7 @@ def generate_draftpost():
   # we will pass the prompts into the ai create function
   prompt = f'Write a 3 paragraph blog post that shows off to the general public what you learned to do today using {language} and {framework}. The blog post should be more than 3 paragraphs and have lots of detail.The blog should be impressive to potential employers. The tone of the blog post should be positive, humble and excited. {prompt} Mention how you will continually work to get better. Use some emojis.'
 
-  result = openai.Completion.create(engine='text-davinci-003', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
-  # loop = asyncio.get_event_loop()
-  # result = loop.run_until_complete(openai.Completion.create(engine='text-davinci-002', prompt=prompt, max_tokens=100, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6))
+  result = openai.Completion.create(engine='text-davinci-003', prompt=prompt, max_tokens=1000, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
   return result
 
   
@@ -192,7 +190,6 @@ def create_user():
   new_user = User(username=data['username'], email=data['email'])
   db.session.add(new_user)
   db.session.commit()
-  # return jsonify({'message': 'New user created!'})
   return repr(new_user)
 
     
