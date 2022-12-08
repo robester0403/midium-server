@@ -101,6 +101,7 @@ def get_allposts():
   for blogpost in blogposts:
     blogpost_data = {}
     # construct the object
+    blogpost_data['id'] = blogpost.id
     blogpost_data['title'] = blogpost.title
     blogpost_data['author'] = blogpost.author
     blogpost_data['content'] = blogpost.content
@@ -115,6 +116,7 @@ def get_post(blog_id): # pass in the id here
   if not blogpost:
     return jsonify({'message': 'No blog post of this id was found'})
   blogpost_data = {}
+  blogpost_data['id'] = blogpost.id
   blogpost_data['title'] = blogpost.title
   blogpost_data['author'] = blogpost.author
   blogpost_data['content'] = blogpost.content
@@ -162,7 +164,7 @@ def delete_post(blog_id):
   db.session.commit()
   return jsonify({'message': f'Blog post {blog_id} was deleted'})
 
-# routes: Users
+# routes: Users (so far this is not used as we make a decision on how to manage the app for the general public)
 @app.route('/users', methods=['GET'])
 def get_users():
   users = User.query.all()
