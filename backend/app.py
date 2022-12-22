@@ -22,7 +22,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123456@localhost/alchemy"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost/midium"
 db = SQLAlchemy(app)
 CORS(app)
 #----------------------------------------------------------------------------#
@@ -52,7 +52,7 @@ class Blogpost(db.Model):
   edited_at = db.Column(db.DateTime, nullable=True)
 
   def __repr__(self):
-    return f'Blogpost: {self.title}' # F allows string interpolation of python variables
+    return f'Blogpost: {self.title}'
 
   def __init__(self, title, author, content): # constructor to create an object fromn a class
     self.title = title
@@ -214,8 +214,8 @@ def delete_user(user_id):
   return jsonify({'message': 'The user has been deleted!'})
 
 # Python terminal command doesn't work so hardcode the table creation here
-# with app.app_context():
-#     db.create_all()
+with app.app_context():
+    db.create_all()
 
 mode = 'dev'
 
