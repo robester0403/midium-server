@@ -22,7 +22,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:password@localhost/midium"
+app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://postgres:123456@localhost/alchemy"
 db = SQLAlchemy(app)
 CORS(app)
 #----------------------------------------------------------------------------#
@@ -52,14 +52,14 @@ class Blogpost(db.Model):
   edited_at = db.Column(db.DateTime, nullable=True)
 
   def __repr__(self):
-    return f'Blogpost: {self.title}'
+    return f'Blogpost: {self.title}' # F allows string interpolation of python variables
 
-  def __init__(self, title, author, content):
+  def __init__(self, title, author, content): # constructor to create an object fromn a class
     self.title = title
     self.author = author
     self.content = content
 
-def format_blogpost(blogpost):
+def format_blogpost(blogpost): # formatted JSON object that can be returned without another network request
   return {
     'title': blogpost.title,
     'author': blogpost.author,
@@ -80,6 +80,7 @@ def generate_draftpost():
   language = request.json['language']
   framework = request.json['framework']
   prompt = request.json['prompt']
+  # we will pass the prompts into the ai create function
   prompt = f'Write a 3 paragraph blog post that shows off to the general public what you learned to do today using {language} and {framework}. The blog post should be more than 3 paragraphs and have lots of detail.The blog should be impressive to potential employers. The tone of the blog post should be positive, humble and excited. {prompt} Mention how you will continually work to get better. Use some emojis.'
 
   result = openai.Completion.create(engine='text-davinci-003', prompt=prompt, max_tokens=1000, temperature=0.9, top_p=1, frequency_penalty=0, presence_penalty=0.6)
@@ -99,7 +100,7 @@ def get_allposts():
   data = []
   for blogpost in blogposts:
     blogpost_data = {}
-
+    # construct the object
     blogpost_data['id'] = blogpost.id
     blogpost_data['title'] = blogpost.title
     blogpost_data['author'] = blogpost.author
@@ -110,7 +111,7 @@ def get_allposts():
   return jsonify({'posts': data})
 
 @app.route('/api/blogpost/<blog_id>', methods = ['GET'])
-def get_post(blog_id):
+def get_post(blog_id): # pass in the id here
   blogpost = Blogpost.query.filter_by(id=blog_id).first()
   if not blogpost:
     return jsonify({'message': 'No blog post of this id was found'})
@@ -123,6 +124,7 @@ def get_post(blog_id):
   blogpost_data['edited_at'] = blogpost.edited_at
   return jsonify({"data": blogpost_data})
   
+
 @app.route('/api/blogpost', methods=['POST'])
 def create_post():
   title = request.json['title']
@@ -134,7 +136,7 @@ def create_post():
   db.session.add(blogpost)
   db.session.commit()
 
-  return format_blogpost(blogpost)
+  return format_blogpost(blogpost) # returns info for the post created
 
 @app.route('/api/blogpost/<blog_id>', methods=['PUT'])
 def update_post(blog_id):
@@ -162,6 +164,7 @@ def delete_post(blog_id):
   db.session.commit()
   return jsonify({'message': f'Blog post {blog_id} was deleted'})
 
+# routes: Users (so far this is not used as we make a decision on how to manage the app for the general public)
 @app.route('/users', methods=['GET'])
 def get_users():
   users = User.query.all()
@@ -191,6 +194,7 @@ def create_user():
   db.session.commit()
   return repr(new_user)
 
+    
 @app.route('/users/<user_id>', methods=['PUT'])
 def promote_user(user_id):
   user = User.query.filter_by(id=user_id).first()
@@ -209,11 +213,11 @@ def delete_user(user_id):
   db.session.commit()
   return jsonify({'message': 'The user has been deleted!'})
 
-
+# Python terminal command doesn't work so hardcode the table creation here
 # with app.app_context():
 #     db.create_all()
 
-# mode = 'dev'
+mode = 'dev'
 
 #----------------------------------------------------------------------------#
 # Dev vs Prod server
